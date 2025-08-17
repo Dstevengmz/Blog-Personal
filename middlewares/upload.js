@@ -1,6 +1,5 @@
 const multer = require("multer");
 
-// Use memory storage so we can stream buffers to Cloudinary
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {

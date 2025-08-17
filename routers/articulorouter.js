@@ -11,6 +11,6 @@ router.post('/agregaarticulo', autenticacionmiddlewar, rolmiddlewar(['admin']), 
 router.delete('/eliminararticulo/:id', autenticacionmiddlewar, propietarioArticulo, ArticuloRouter.eliminarArticulo);
 router.put('/editararticulo/:id', autenticacionmiddlewar, propietarioArticulo, ArticuloRouter.actualizarArticulo);
 router.get('/buscararticulo/:id', ArticuloRouter.obtenerArticuloPorId);
-router.post('/imagenarticulo', autenticacionmiddlewar, rolmiddlewar(['admin']), upload.array('imagenes', 5), ArticuloRouter.createimagen);
+router.post('/imagenarticulo', autenticacionmiddlewar, rolmiddlewar(['admin']), upload.array('imagenes', 10), ArticuloRouter.createimagen);
 
 module.exports = router;

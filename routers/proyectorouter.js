@@ -13,6 +13,6 @@ router.delete('/eliminarproyecto/:id', autenticacionmiddlewar, propietarioProyec
 router.put('/editarproyecto/:id', autenticacionmiddlewar, propietarioProyecto, ProyectoController.actualizarProyecto);
 router.get('/buscarproyecto/:id', ProyectoController.obtenerProyectoPorId);
 // Subida de imágenes de proyecto: sólo admin
-router.post('/imagen', autenticacionmiddlewar, rolmiddlewar(['admin']), upload.array('imagenes', 5), ProyectoController.createimagen);
+router.post('/imagen', autenticacionmiddlewar, rolmiddlewar(['admin']), upload.array('imagenes', 10), ProyectoController.createimagen);
 
 module.exports = router;
