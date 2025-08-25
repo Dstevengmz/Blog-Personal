@@ -98,6 +98,76 @@ class ProyectoService {
       console.log("Error al obtener Proyecto por ID:", error);
     }
   }
+    static async actualizarImagenes(idProyecto, files, imagenesEliminar = []) {
+    try {
+      const proyecto = await Proyecto.findByPk(idProyecto, {
+        include: [{ model: Imagen, as: "imagenes" }],
+      });
+
+      if (!proyecto) {
+        throw new Error("Proyecto no encontrado");
+      }
+
+      const getPublicIdFromUrl = (url) => {
+        try {
+          const afterUpload = url.split('/upload/')[1];
+          if (!afterUpload) return null;
+          const noQuery = afterUpload.split('?')[0];
+          const noExt = noQuery.replace(/\.[^/.]+$/, '');
+          const noVersion = noExt.replace(/^v\d+\//, '');
+          return noVersion; 
+        } catch {
+          return null;
+        }
+      };
+
+      const urlsAEliminar = new Set((imagenesEliminar || []).map((x) => x.url));
+      for (const imagen of imagenesEliminar || []) {
+        const publicId = getPublicIdFromUrl(imagen.url);
+        if (publicId) {
+          try { await cloudinary.uploader.destroy(publicId); } catch (e) { console.warn('No se pudo eliminar en Cloudinary:', publicId, e?.message); }
+        }
+      }
+
+      const uploaded = [];
+      for (const file of files) {
+        const cloudUrl = await new Promise((resolve, reject) => {
+          const uploadStream = cloudinary.uploader.upload_stream(
+            { folder: "blogpersonal/proyectos" },
+            (error, result) => {
+              if (error) return reject(error);
+              resolve(result.secure_url);
+            }
+          );
+          const readable = new stream.Readable();
+          readable._read = () => {};
+          readable.push(file.buffer);
+          readable.push(null);
+          readable.pipe(uploadStream);
+        });
+        uploaded.push({ url: cloudUrl, idProyecto: proyecto.id });
+      }
+
+      // Mantener solo las existentes que NO fueron marcadas para eliminar
+      const existentesFiltradas = (proyecto.imagenes || [])
+        .map((imagen) => imagen.url)
+        .filter((url) => !urlsAEliminar.has(url));
+
+      const todasLasImagenes = [...existentesFiltradas, ...uploaded.map((img) => img.url)];
+      const nuevasImagenes = todasLasImagenes.slice(0, 10);
+
+      await Imagen.destroy({ where: { idProyecto: idProyecto } });
+      const nuevasImagenesData = nuevasImagenes.map(url => ({ url, idProyecto: proyecto.id }));
+      await Imagen.bulkCreate(nuevasImagenesData);
+
+      return await Proyecto.findByPk(idProyecto, {
+        include: [{ model: Imagen, as: "imagenes" }],
+      });
+    } catch (error) {
+      console.error("Error al actualizar las imágenes:", error);
+      throw new Error("Error al actualizar las imágenes");
+    }
+  }
 }
 
 module.exports = ProyectoService;

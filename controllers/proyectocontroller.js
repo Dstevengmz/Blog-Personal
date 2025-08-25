@@ -62,6 +62,15 @@ class ProyectoController {
       const { id } = req.params;
       const { idUsuario, titulo, descripcion, github, demoUrl, imagen } =
         req.body;
+      const files = req.files || [];
+      // imagenesEliminar puede llegar como string o array de strings JSON
+      let imagenesEliminarRaw = req.body.imagenesEliminar || [];
+      if (!Array.isArray(imagenesEliminarRaw)) imagenesEliminarRaw = [imagenesEliminarRaw];
+      const imagenesEliminar = imagenesEliminarRaw
+        .map((x) => {
+          try { return typeof x === 'string' ? JSON.parse(x) : x; } catch { return null; }
+        })
+        .filter(Boolean);
 
       if (isNaN(id)) {
         return res.status(400).json({ error: "ID inválido" });
@@ -80,11 +89,15 @@ class ProyectoController {
         return res.status(404).json({ error: "Proyecto no encontrado" });
       }
 
-      res.json({ mensaje: "Proyecto actualizado correctamente" });
+  let proyecto = await ProyectoService.actualizarImagenes(id, files, imagenesEliminar);
+
+      res.json({
+        mensaje: "Proyecto e imágenes actualizados correctamente",
+        proyecto,
+      });
     } catch (e) {
-      res
-        .status(500)
-        .json({ error: "Error en el servidor al actualizar Proyecto" });
+      console.error(e);
+      res.status(500).json({ error: "Error al actualizar el Proyecto" });
     }
   }
 

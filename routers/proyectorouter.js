@@ -10,7 +10,8 @@ router.get('/listarproyectos', ProyectoController.listarProyecto);
 // Crear proyecto: sólo admin
 router.post('/agregaproyecto', autenticacionmiddlewar, rolmiddlewar(['admin']), ProyectoController.crearProyecto);
 router.delete('/eliminarproyecto/:id', autenticacionmiddlewar, propietarioProyecto, ProyectoController.eliminarProyecto);
-router.put('/editarproyecto/:id', autenticacionmiddlewar, propietarioProyecto, ProyectoController.actualizarProyecto);
+router.put('/editarproyecto/:id', autenticacionmiddlewar, rolmiddlewar(['admin']), propietarioProyecto, upload.array('imagenes', 10), ProyectoController.actualizarProyecto);
+
 router.get('/buscarproyecto/:id', ProyectoController.obtenerProyectoPorId);
 // Subida de imágenes de proyecto: sólo admin
 router.post('/imagen', autenticacionmiddlewar, rolmiddlewar(['admin']), upload.array('imagenes', 10), ProyectoController.createimagen);
