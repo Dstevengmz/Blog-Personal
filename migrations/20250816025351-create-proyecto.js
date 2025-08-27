@@ -18,6 +18,9 @@ module.exports = {
       titulo: {
         type: Sequelize.STRING,
       },
+      tipo: {
+        type: Sequelize.ENUM('web', 'movil'),
+      },
       descripcion: {
         type: Sequelize.TEXT,
       },

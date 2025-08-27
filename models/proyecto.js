@@ -13,6 +13,7 @@ module.exports = (sequelize, DataTypes) => {
   Proyecto.init({
     titulo: DataTypes.STRING,
     descripcion: DataTypes.TEXT,
+    tipo: DataTypes.ENUM('web', 'movil'),
     github: DataTypes.STRING,
     demoUrl: DataTypes.STRING,
     imagen: DataTypes.STRING,

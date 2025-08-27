@@ -3,12 +3,13 @@ const cloudinary = require("./cloudinary");
 const stream = require("stream");
 
 class ProyectoService {
-  static async obtenerProyectos() {
+  static async obtenerProyectos(tipo) {
     try {
+      const where = tipo ? { tipo } : undefined;
       return await Proyecto.findAll({
+        where,
         include: [{ model: Imagen, as: "imagenes" }],
       });
-      
     } catch (error) {
       console.log("Error al obtener proyectos:", error);
     }
@@ -48,7 +49,8 @@ class ProyectoService {
     descripcion,
     github,
     demoUrl,
-    imagen
+    imagen,
+    tipo
   ) {
     try {
       return await Proyecto.create({
@@ -58,6 +60,7 @@ class ProyectoService {
         github,
         demoUrl,
         imagen,
+        tipo,
       });
     } catch (e) {
       console.log("Error en el servidor al guardar el proyecto:", e);
@@ -91,14 +94,14 @@ class ProyectoService {
 
   static async obtenerProyectoPorId(id) {
     try {
-    return await Proyecto.findByPk(id, {
-    include: [{ model: Imagen, as: "imagenes" }],
-  });
+      return await Proyecto.findByPk(id, {
+        include: [{ model: Imagen, as: "imagenes" }],
+      });
     } catch (error) {
       console.log("Error al obtener Proyecto por ID:", error);
     }
   }
-    static async actualizarImagenes(idProyecto, files, imagenesEliminar = []) {
+  static async actualizarImagenes(idProyecto, files, imagenesEliminar = []) {
     try {
       const proyecto = await Proyecto.findByPk(idProyecto, {
         include: [{ model: Imagen, as: "imagenes" }],
@@ -110,12 +113,12 @@ class ProyectoService {
 
       const getPublicIdFromUrl = (url) => {
         try {
-          const afterUpload = url.split('/upload/')[1];
+          const afterUpload = url.split("/upload/")[1];
           if (!afterUpload) return null;
-          const noQuery = afterUpload.split('?')[0];
-          const noExt = noQuery.replace(/\.[^/.]+$/, '');
-          const noVersion = noExt.replace(/^v\d+\//, '');
-          return noVersion; 
+          const noQuery = afterUpload.split("?")[0];
+          const noExt = noQuery.replace(/\.[^/.]+$/, "");
+          const noVersion = noExt.replace(/^v\d+\//, "");
+          return noVersion;
         } catch {
           return null;
         }
@@ -125,7 +128,15 @@ class ProyectoService {
       for (const imagen of imagenesEliminar || []) {
         const publicId = getPublicIdFromUrl(imagen.url);
         if (publicId) {
-          try { await cloudinary.uploader.destroy(publicId); } catch (e) { console.warn('No se pudo eliminar en Cloudinary:', publicId, e?.message); }
+          try {
+            await cloudinary.uploader.destroy(publicId);
+          } catch (e) {
+            console.warn(
+              "No se pudo eliminar en Cloudinary:",
+              publicId,
+              e?.message
+            );
+          }
         }
       }
 
@@ -153,11 +164,17 @@ class ProyectoService {
         .map((imagen) => imagen.url)
         .filter((url) => !urlsAEliminar.has(url));
 
-      const todasLasImagenes = [...existentesFiltradas, ...uploaded.map((img) => img.url)];
+      const todasLasImagenes = [
+        ...existentesFiltradas,
+        ...uploaded.map((img) => img.url),
+      ];
       const nuevasImagenes = todasLasImagenes.slice(0, 10);
 
       await Imagen.destroy({ where: { idProyecto: idProyecto } });
-      const nuevasImagenesData = nuevasImagenes.map(url => ({ url, idProyecto: proyecto.id }));
+      const nuevasImagenesData = nuevasImagenes.map((url) => ({
+        url,
+        idProyecto: proyecto.id,
+      }));
       await Imagen.bulkCreate(nuevasImagenesData);
 
       return await Proyecto.findByPk(idProyecto, {

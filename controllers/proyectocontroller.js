@@ -2,7 +2,10 @@ const ProyectoService = require("../services/proyectoservice");
 class ProyectoController {
   static async listarProyecto(req, res) {
     try {
-      let lista = await ProyectoService.obtenerProyectos();
+  const { tipo } = req.query;
+  const valid = tipo === undefined || tipo === 'web' || tipo === 'movil';
+  if (!valid) return res.status(400).json({ error: "Tipo inválido" });
+  let lista = await ProyectoService.obtenerProyectos(tipo);
       res.json(lista);
     } catch (e) {
       res.status(500).json({ error: "Error en la petición" });
@@ -22,7 +25,7 @@ class ProyectoController {
 
   static async crearProyecto(req, res) {
     try {
-      let { idUsuario, titulo, descripcion, github, demoUrl, imagen } =
+      let { idUsuario, titulo, descripcion, github, demoUrl, imagen,tipo } =
         req.body;
       let proyecto = await ProyectoService.crearProyecto(
         idUsuario,
@@ -30,7 +33,8 @@ class ProyectoController {
         descripcion,
         github,
         demoUrl,
-        imagen
+        imagen,
+        tipo
       );
       res.json(proyecto);
     } catch (e) {
@@ -60,7 +64,7 @@ class ProyectoController {
   static async actualizarProyecto(req, res) {
     try {
       const { id } = req.params;
-      const { idUsuario, titulo, descripcion, github, demoUrl, imagen } =
+      const { idUsuario, titulo, descripcion, github, demoUrl, imagen,tipo } =
         req.body;
       const files = req.files || [];
       // imagenesEliminar puede llegar como string o array de strings JSON
@@ -83,6 +87,7 @@ class ProyectoController {
         github,
         demoUrl,
         imagen,
+        tipo
       });
 
       if (!resultado[0]) {
