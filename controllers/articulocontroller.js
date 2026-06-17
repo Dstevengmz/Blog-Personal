@@ -13,7 +13,11 @@ class ArticuloController {
   }
   static async listarArticulo(req, res) {
     try {
-      let lista = await ArticuloService.obtenerArticulos();
+      const rawLimit = parseInt(req.query.limit, 10);
+      const limit = Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(rawLimit, 50)
+        : undefined;
+      let lista = await ArticuloService.obtenerArticulos(limit);
       res.json(lista);
     } catch (e) {
       res.status(500).json({ error: "Error en la petición" });

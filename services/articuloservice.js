@@ -3,11 +3,14 @@ const cloudinary = require('./cloudinary');
 const stream = require('stream');
 
 class ArticuloService {
-    static async obtenerArticulos() {
+    static async obtenerArticulos(limit) {
         try {
-            return await Articulo.findAll({
-                include: [{ model: Imagen, as: 'imagenes' }]
-            });
+            const options = {
+                include: [{ model: Imagen, as: 'imagenes' }],
+                order: [['createdAt', 'DESC']],
+            };
+            if (limit) options.limit = limit;
+            return await Articulo.findAll(options);
         } catch (error) {
             console.log("Error al obtener articulos:", error);
         }

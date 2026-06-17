@@ -2,10 +2,16 @@ const ProyectoService = require("../services/proyectoservice");
 class ProyectoController {
   static async listarProyecto(req, res) {
     try {
-  const { tipo } = req.query;
-  const valid = tipo === undefined || tipo === 'web' || tipo === 'movil';
-  if (!valid) return res.status(400).json({ error: "Tipo inválido" });
-  let lista = await ProyectoService.obtenerProyectos(tipo);
+      const { tipo } = req.query;
+      const valid = tipo === undefined || tipo === 'web' || tipo === 'movil';
+      if (!valid) return res.status(400).json({ error: "Tipo inválido" });
+
+      const rawLimit = parseInt(req.query.limit, 10);
+      const limit = Number.isFinite(rawLimit) && rawLimit > 0
+        ? Math.min(rawLimit, 50)
+        : undefined;
+
+      let lista = await ProyectoService.obtenerProyectos(tipo, limit);
       res.json(lista);
     } catch (e) {
       res.status(500).json({ error: "Error en la petición" });

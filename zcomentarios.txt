@@ -2,3 +2,7 @@ npx sequelize-cli db:migrate
 
 
 npx sequelize-cli db:seed:all
+
+
+heroku run npx sequelize-cli db:migrate --app nombre
+heroku run npx sequelize-cli db:seed:all --app nombre

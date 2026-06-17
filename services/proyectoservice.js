@@ -3,13 +3,16 @@ const cloudinary = require("./cloudinary");
 const stream = require("stream");
 
 class ProyectoService {
-  static async obtenerProyectos(tipo) {
+  static async obtenerProyectos(tipo, limit) {
     try {
       const where = tipo ? { tipo } : undefined;
-      return await Proyecto.findAll({
+      const options = {
         where,
         include: [{ model: Imagen, as: "imagenes" }],
-      });
+        order: [['createdAt', 'DESC']],
+      };
+      if (limit) options.limit = limit;
+      return await Proyecto.findAll(options);
     } catch (error) {
       console.log("Error al obtener proyectos:", error);
     }
