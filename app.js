@@ -11,6 +11,9 @@ const Comentarios = require("./routers/comentariorouter");
 const app = express();
 const puerto = process.env.PORT || 2100;
 
+
+app.set("trust proxy", 1);
+
 app.use("/uploads", express.static("uploads"));
 
 app.use(

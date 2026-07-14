@@ -9,6 +9,9 @@ const limiter = rateLimit({
   max: 5,
   standardHeaders: true,
   legacyHeaders: false,
+  message: {
+    error: 'Has realizado demasiados intentos. Espera un minuto antes de volver a enviar.',
+  },
 });
 
 router.post('/contacto', limiter, ContactoController.enviar);

@@ -32,3 +32,17 @@ test("rechaza direcciones de correo inválidas", () => {
     { code: "INVALID_EMAIL", status: 400 }
   );
 });
+
+test("normaliza un remitente copiado con comillas desde Render", () => {
+  assert.equal(
+    _test.normalizeSender('"Darwin Steven Gómez <onboarding@resend.dev>"'),
+    "Darwin Steven Gómez <onboarding@resend.dev>"
+  );
+});
+
+test("usa el remitente seguro cuando la configuración es inválida", () => {
+  assert.equal(
+    _test.normalizeSender("RESEND_FROM=valor incorrecto"),
+    "Darwin Steven Gómez <onboarding@resend.dev>"
+  );
+});

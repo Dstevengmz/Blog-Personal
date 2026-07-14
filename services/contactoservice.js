@@ -4,6 +4,7 @@ const { randomUUID } = require("crypto");
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RESEND_HOST = "api.resend.com";
 const RESEND_PATH = "/emails";
+const DEFAULT_FROM = "Darwin Steven Gómez <onboarding@resend.dev>";
 
 function publicError(message, status = 500, code) {
   const error = new Error(message);
@@ -18,6 +19,25 @@ function cleanText(value, maxLength) {
 
 function cleanHeader(value, maxLength) {
   return cleanText(value, maxLength).replace(/[\r\n]+/g, " ");
+}
+
+function removeWrappingQuotes(value) {
+  const text = cleanHeader(value, 200);
+  const hasDoubleQuotes = text.startsWith('"') && text.endsWith('"');
+  const hasSingleQuotes = text.startsWith("'") && text.endsWith("'");
+  return hasDoubleQuotes || hasSingleQuotes ? text.slice(1, -1).trim() : text;
+}
+
+function normalizeSender(value) {
+  const sender = removeWrappingQuotes(value);
+  if (EMAIL_PATTERN.test(sender)) return sender;
+
+  const match = sender.match(/^([^<>]+)\s*<([^<>\s]+)>$/);
+  if (match && EMAIL_PATTERN.test(match[2])) {
+    return `${match[1].trim()} <${match[2].toLowerCase()}>`;
+  }
+
+  return DEFAULT_FROM;
 }
 
 function escapeHtml(value) {
@@ -136,10 +156,7 @@ function sendWithResend(apiKey, payload) {
 async function enviar(contact) {
   const apiKey = process.env.RESEND_API_KEY;
   const to = cleanHeader(process.env.CONTACT_EMAIL, 160);
-  const from = cleanHeader(
-    process.env.RESEND_FROM || "BlogDarwin <onboarding@resend.dev>",
-    200
-  );
+  const from = normalizeSender(process.env.RESEND_FROM || DEFAULT_FROM);
 
   if (!apiKey) {
     throw publicError("El servicio de contacto no está configurado.", 500, "RESEND_NOT_CONFIGURED");
@@ -155,5 +172,5 @@ async function enviar(contact) {
 
 module.exports = {
   enviar,
-  _test: { buildEmailPayload, escapeHtml },
+  _test: { buildEmailPayload, escapeHtml, normalizeSender },
 };
