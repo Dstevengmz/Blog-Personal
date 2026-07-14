@@ -13,7 +13,14 @@ class AutenticacionController {
       const user = await AuthService.registrar(req.body);
       res.status(201).json({ mensaje: "Usuario creado", user: publicUser(user) });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      const status = error.status || 400;
+      res.status(status).json({
+        error: status === 409
+          ? "El correo ya está registrado"
+          : error.status === 400
+            ? error.message
+            : "No fue posible crear la cuenta",
+      });
     }
   }
 
@@ -22,7 +29,7 @@ class AutenticacionController {
       const { user, token } = await AuthService.iniciarsesion(req.body);
       res.json({ mensaje: "Login exitoso", token, user: publicUser(user) });
     } catch (error) {
-      res.status(400).json({ error: error.message });
+      res.status(401).json({ error: "Correo o contraseña incorrectos" });
     }
   }
 

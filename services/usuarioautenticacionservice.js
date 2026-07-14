@@ -14,21 +14,45 @@ const {
 const SECRET = process.env.JWT_SECRET;
 const RESET_TOKEN_TTL_MS = 30 * 60 * 1000;
 
+function validateRegistration({ nombre, email, password }) {
+  const normalizedName = String(nombre || "").trim();
+  const normalizedEmail = String(email || "").trim().toLowerCase();
+  if (normalizedName.length < 2 || normalizedName.length > 80) {
+    throw resetError("El nombre debe tener entre 2 y 80 caracteres", 400, "INVALID_NAME");
+  }
+  if (!EMAIL_PATTERN.test(normalizedEmail) || normalizedEmail.length > 160) {
+    throw resetError("El correo electrónico no es válido", 400, "INVALID_EMAIL");
+  }
+  validatePassword(password);
+  return { nombre: normalizedName, email: normalizedEmail, password };
+}
+
 class AutenticacionService {
 
-  static async registrar({ nombre, email, password, rol }) {
-    const hashedPassword = await bcrypt.hash(password, 10);
+  static async registrar({ nombre, email, password }) {
+    const validated = validateRegistration({ nombre, email, password });
+    const existingUser = await Usuario.unscoped().findOne({
+      where: { email: validated.email },
+      attributes: ["id"],
+    });
+    if (existingUser) {
+      throw resetError("El correo ya está registrado", 409, "EMAIL_ALREADY_EXISTS");
+    }
+
+    const hashedPassword = await bcrypt.hash(validated.password, 10);
 
     return await Usuario.create({
-      nombre,
-      email,
+      nombre: validated.nombre,
+      email: validated.email,
       password: hashedPassword,
-      rol: rol && ["admin", "visitante"].includes(rol) ? rol : "visitante",
+      // El registro público nunca puede crear una cuenta administrativa.
+      rol: "visitante",
     });
   }
 
   static async iniciarsesion({ email, password }) {
-    const user = await Usuario.unscoped().findOne({ where: { email } });
+    const normalizedEmail = String(email || "").trim().toLowerCase();
+    const user = await Usuario.unscoped().findOne({ where: { email: normalizedEmail } });
     if (!user) throw new Error("Usuario no encontrado");
     const valid = await bcrypt.compare(password, user.password);
     if (!valid) throw new Error("Contraseña incorrecta");

@@ -1,5 +1,12 @@
 const UsuarioService = require("../services/usuarioservice");
 
+const publicUser = (user) => ({
+	id: user.id,
+	nombre: user.nombre,
+	email: user.email,
+	rol: user.rol,
+});
+
 class UsuarioController {
 	static async listarUsuario(req, res) {
 		try {
@@ -19,9 +26,11 @@ class UsuarioController {
 				password,
 				rol
 			);
-			res.json(usuario);
+			res.status(201).json(publicUser(usuario));
 		} catch (e) {
-			res.status(500).json({ error: "Error en la petición" });
+			res.status(e.status || 500).json({
+				error: e.status ? e.message : "No fue posible crear el usuario",
+			});
 		}
 	}
 
@@ -64,7 +73,9 @@ class UsuarioController {
 
 			res.json({ mensaje: "Usuario actualizado correctamente" });
 		} catch (e) {
-			res.status(500).json({ error: "Error en el servidor al actualizar Usuario" });
+			res.status(e.status || 500).json({
+				error: e.status ? e.message : "Error en el servidor al actualizar Usuario",
+			});
 		}
 	}
 
