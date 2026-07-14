@@ -1,6 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { _test } = require("../services/contactoservice");
+const { _test: emailTest } = require("../services/emailservice");
 
 test("construye un correo seguro con reply_to", () => {
   const payload = _test.buildEmailPayload(
@@ -12,7 +13,6 @@ test("construye un correo seguro con reply_to", () => {
     },
     {
       to: "destino@example.com",
-      from: "BlogDarwin <onboarding@resend.dev>",
     }
   );
 
@@ -27,7 +27,7 @@ test("rechaza direcciones de correo inválidas", () => {
   assert.throws(
     () => _test.buildEmailPayload(
       { nombre: "Persona", email: "correo-invalido", mensaje: "Mensaje suficientemente largo" },
-      { to: "destino@example.com", from: "BlogDarwin <onboarding@resend.dev>" }
+      { to: "destino@example.com" }
     ),
     { code: "INVALID_EMAIL", status: 400 }
   );
@@ -35,14 +35,14 @@ test("rechaza direcciones de correo inválidas", () => {
 
 test("normaliza un remitente copiado con comillas desde Render", () => {
   assert.equal(
-    _test.normalizeSender('"Darwin Steven Gómez <onboarding@resend.dev>"'),
+    emailTest.normalizeSender('"Darwin Steven Gómez <onboarding@resend.dev>"'),
     "Darwin Steven Gómez <onboarding@resend.dev>"
   );
 });
 
 test("usa el remitente seguro cuando la configuración es inválida", () => {
   assert.equal(
-    _test.normalizeSender("RESEND_FROM=valor incorrecto"),
+    emailTest.normalizeSender("RESEND_FROM=valor incorrecto"),
     "Darwin Steven Gómez <onboarding@resend.dev>"
   );
 });

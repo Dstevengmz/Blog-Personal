@@ -15,10 +15,17 @@ Usuario.hasMany(models.Comentario, { foreignKey: 'idUsuario', as: 'comentarios' 
     nombre: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
-    rol: DataTypes.ENUM('admin','visitante')
+    rol: DataTypes.ENUM('admin','visitante'),
+    passwordResetToken: DataTypes.STRING(64),
+    passwordResetExpires: DataTypes.DATE
   }, {
     sequelize,
     modelName: 'Usuario',
+    defaultScope: {
+      attributes: {
+        exclude: ['password', 'passwordResetToken', 'passwordResetExpires']
+      }
+    }
   });
   return Usuario;
 };
