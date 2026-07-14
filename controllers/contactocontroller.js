@@ -17,11 +17,12 @@ class ContactoController {
       required('email', email);
       required('mensaje', mensaje);
 
-  const info = await ContactoService.enviar({ nombre, email, asunto, mensaje });
+      const info = await ContactoService.enviar({ nombre, email, asunto, mensaje });
 
       res.json({ ok: true, messageId: info.messageId });
     } catch (err) {
       const status = err.status || 500;
+      console.error("Error de contacto:", err.code || "CONTACT_ERROR", err.details || err.message);
       res.status(status).json({ error: err.message || 'No se pudo enviar el mensaje' });
     }
   }
